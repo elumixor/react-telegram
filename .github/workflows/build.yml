@@ -7,27 +7,19 @@ permissions:
   contents: read
 
 jobs:
-  # In CI react-message-renderer is consumed from npm, not via local bun link.
-  # Override the dep so install works on a fresh runner. The local "link:"
-  # spec in package.json is only used during local development.
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
-      - name: Use published react-message-renderer
-        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
       - run: bun install
-      - run: bun build ./src/index.ts --outdir ./dist --target=node --external react --external react-reconciler --external grammy --external @elumixor/react-message-renderer
-      - run: bunx tsc --project tsconfig.build.json
+      - run: bun run build
 
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
-      - name: Use published react-message-renderer
-        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
       - run: bun install
       - run: bun test
 
@@ -36,10 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
-      - name: Use published react-message-renderer
-        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
       - run: bun install
-      - run: bunx biome check .
+      - run: bun run lint
 
   publish:
     needs: [build, test, lint]
@@ -57,17 +47,10 @@ jobs:
         id: check
         uses: EndBug/version-check@v3
 
-      - name: Use published react-message-renderer
-        if: steps.check.outputs.changed == 'true'
-        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
-
       - run: bun install
         if: steps.check.outputs.changed == 'true'
 
-      - run: bun build ./src/index.ts --outdir ./dist --target=node --external react --external react-reconciler --external grammy --external @elumixor/react-message-renderer
-        if: steps.check.outputs.changed == 'true'
-
-      - run: bunx tsc --project tsconfig.build.json
+      - run: bun run build
         if: steps.check.outputs.changed == 'true'
 
       - run: npm publish --access public --provenance

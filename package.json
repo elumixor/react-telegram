@@ -13,13 +13,12 @@
     "./dist"
   ],
   "scripts": {
-    "predev:dedupe-react": "rm -rf ../react-message-renderer/node_modules/react ../react-message-renderer/node_modules/@types/react",
-    "build": "bun run predev:dedupe-react && bun run build:clean && bun run build:bundle && bun run build:declaration",
+    "build": "bun run build:clean && bun run build:bundle && bun run build:declaration",
     "build:clean": "rm -rf ./dist",
     "build:bundle": "bun build ./src/index.ts --outdir ./dist --target=node --external react --external react-reconciler --external grammy --external @elumixor/react-message-renderer",
-    "build:declaration": "tsc --project tsconfig.build.json --preserveSymlinks",
-    "test": "bun run predev:dedupe-react && bun test --preserve-symlinks",
-    "check": "bun run predev:dedupe-react && tsc --noEmit --preserveSymlinks && bun run lint && biome format .",
+    "build:declaration": "tsc --project tsconfig.build.json",
+    "test": "bun test",
+    "check": "tsc --noEmit && bun run lint && biome format .",
     "lint": "biome check . --fix",
     "format": "biome format . --write",
     "release:patch": "npm version patch -m \"Release v%s\" && git push --tags",
@@ -40,11 +39,7 @@
     "react": ">=19"
   },
   "dependencies": {
-    "@elumixor/react-message-renderer": "link:@elumixor/react-message-renderer"
-  },
-  "overrides": {
-    "react": "$react",
-    "react-reconciler": "$react-reconciler"
+    "@elumixor/react-message-renderer": "^0.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
