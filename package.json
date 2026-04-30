@@ -1,0 +1,57 @@
+{
+  "name": "@elumixor/react-telegram",
+  "version": "0.1.0",
+  "description": "Stream React JSX into editable Telegram messages. Built on @elumixor/react-message-renderer + grammy.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elumixor/react-telegram.git"
+  },
+  "files": [
+    "./dist"
+  ],
+  "scripts": {
+    "predev:dedupe-react": "rm -rf ../react-message-renderer/node_modules/react ../react-message-renderer/node_modules/@types/react",
+    "build": "bun run predev:dedupe-react && bun run build:clean && bun run build:bundle && bun run build:declaration",
+    "build:clean": "rm -rf ./dist",
+    "build:bundle": "bun build ./src/index.ts --outdir ./dist --target=node --external react --external react-reconciler --external grammy --external @elumixor/react-message-renderer",
+    "build:declaration": "tsc --project tsconfig.build.json --preserveSymlinks",
+    "test": "bun run predev:dedupe-react && bun test --preserve-symlinks",
+    "check": "bun run predev:dedupe-react && tsc --noEmit --preserveSymlinks && bun run lint && biome format .",
+    "lint": "biome check . --fix",
+    "format": "biome format . --write",
+    "release:patch": "npm version patch -m \"Release v%s\" && git push --tags",
+    "release:minor": "npm version minor -m \"Release v%s\" && git push --tags",
+    "release:major": "npm version major -m \"Release v%s\" && git push --tags"
+  },
+  "keywords": [
+    "react",
+    "telegram",
+    "grammy",
+    "bot",
+    "streaming"
+  ],
+  "author": "elumixor",
+  "license": "ISC",
+  "peerDependencies": {
+    "grammy": ">=1.0.0",
+    "react": ">=19"
+  },
+  "dependencies": {
+    "@elumixor/react-message-renderer": "link:@elumixor/react-message-renderer"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-reconciler": "$react-reconciler"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "@types/bun": "latest",
+    "@types/react": "^19.2.14",
+    "grammy": "^1.42.0",
+    "react": "^19.2.5",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,79 @@
+name: Build
+
+on: [push]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # In CI react-message-renderer is consumed from npm, not via local bun link.
+  # Override the dep so install works on a fresh runner. The local "link:"
+  # spec in package.json is only used during local development.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - name: Use published react-message-renderer
+        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
+      - run: bun install
+      - run: bun build ./src/index.ts --outdir ./dist --target=node --external react --external react-reconciler --external grammy --external @elumixor/react-message-renderer
+      - run: bunx tsc --project tsconfig.build.json
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - name: Use published react-message-renderer
+        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
+      - run: bun install
+      - run: bun test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - name: Use published react-message-renderer
+        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
+      - run: bun install
+      - run: bunx biome check .
+
+  publish:
+    needs: [build, test, lint]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check if version has been updated
+        id: check
+        uses: EndBug/version-check@v3
+
+      - name: Use published react-message-renderer
+        if: steps.check.outputs.changed == 'true'
+        run: bun pm pkg set 'dependencies[@elumixor/react-message-renderer]'='latest'
+
+      - run: bun install
+        if: steps.check.outputs.changed == 'true'
+
+      - run: bun build ./src/index.ts --outdir ./dist --target=node --external react --external react-reconciler --external grammy --external @elumixor/react-message-renderer
+        if: steps.check.outputs.changed == 'true'
+
+      - run: bunx tsc --project tsconfig.build.json
+        if: steps.check.outputs.changed == 'true'
+
+      - run: npm publish --access public
+        if: steps.check.outputs.changed == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - run: 'echo "Package version has not been updated, skipping publish"'
+        if: steps.check.outputs.changed == 'false'

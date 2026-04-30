@@ -1,0 +1,22 @@
+{
+  "name": "streaming-counter-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal grammy bot demonstrating streaming React updates into a single editable Telegram message.",
+  "scripts": {
+    "predev:dedupe-react": "rm -rf node_modules/@elumixor/react-message-renderer/node_modules/react node_modules/@elumixor/react-message-renderer/node_modules/@types/react",
+    "dev": "bun run predev:dedupe-react && bun run --preserve-symlinks src/index.tsx"
+  },
+  "dependencies": {
+    "@elumixor/react-message-renderer": "link:@elumixor/react-message-renderer",
+    "@elumixor/react-telegram": "link:@elumixor/react-telegram",
+    "grammy": "^1.30.0",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.14",
+    "typescript": "^6.0.3"
+  }
+}
