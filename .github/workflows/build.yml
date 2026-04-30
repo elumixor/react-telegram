@@ -42,19 +42,6 @@ jobs:
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Check if version has been updated
-        id: check
-        uses: EndBug/version-check@v3
-
       - run: bun install
-        if: steps.check.outputs.changed == 'true'
-
       - run: bun run build
-        if: steps.check.outputs.changed == 'true'
-
       - run: npm publish --access public --provenance
-        if: steps.check.outputs.changed == 'true'
-
-      - run: 'echo "Package version has not been updated, skipping publish"'
-        if: steps.check.outputs.changed == 'false'
