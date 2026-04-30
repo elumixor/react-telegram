@@ -5,7 +5,7 @@
     "": {
       "name": "@elumixor/react-telegram",
       "dependencies": {
-        "@elumixor/react-message-renderer": "^0.1.0",
+        "@elumixor/react-message-renderer": "^0.2.0",
       },
       "devDependencies": {
         "@biomejs/biome": "^2.4.13",
@@ -40,7 +40,7 @@
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.4.13", "", { "os": "win32", "cpu": "x64" }, "sha512-tTcMkXyBrmHi9BfrD2VNHs/5rYIUKETqsBlYOvSAABwBkJhSDVb5e7wPukftsQbO3WzQkXe6kaztC6WtUOXSoQ=="],
 
-    "@elumixor/react-message-renderer": ["@elumixor/react-message-renderer@0.1.0", "", { "dependencies": { "react-reconciler": "^0.33.0" }, "peerDependencies": { "react": ">=19" } }, "sha512-68q4u4pLSPiX/aiC+IlvMQhN2ilSP9CFg9GX/Pu0thM0xUUK4Lm2sZ0V5xqNvv6Z7nBoOM74V+rCpkrqzo06Rw=="],
+    "@elumixor/react-message-renderer": ["@elumixor/react-message-renderer@0.2.0", "", { "dependencies": { "react-reconciler": "^0.33.0" }, "peerDependencies": { "react": ">=19" } }, "sha512-0c3ZCsXOTvTgNsuKq0cBd9PpxcBwRBx45K42fChhBf1HzQ1kKOzPd7dBCWgxqIs77+kBaAwkVG90pbb9+HXX3g=="],
 
     "@grammyjs/types": ["@grammyjs/types@3.26.0", "", {}, "sha512-jlnyfxfev/2o68HlvAGRocAXgdPPX5QabG7jZlbqC2r9DZyWBfzTlg+nu3O3Fy4EhgLWu28hZ/8wr7DsNamP9A=="],
 

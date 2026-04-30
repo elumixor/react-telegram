@@ -1,3 +1,6 @@
+/// <reference path="./jsx.d.ts" />
+
+export * from "./attachments";
 export * from "./markdown-to-telegram-html";
 export * from "./TelegramRenderer";
 export * from "./telegram-message-manager";

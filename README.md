@@ -66,9 +66,25 @@ In the chat, the user sees one message that grows in place from "Loading…" to 
 
 - `TelegramRenderer(ctx, { throttleMs?, logger? })`
 - `TelegramMessageManager(ctx, { replyToMessageId?, logger? })` — single-message-instance manager, if you want to skip the React layer
+- `<Photo src caption?>` and `<Document src filename? caption?>` — declarative attachments. Place them inside `<Message>`; they're sent as replies to the parent text message and tracked positionally so re-renders don't resend.
+- `<Message threadId={n}>` — explicit forum/topic thread routing. Overrides `ctx.message?.message_thread_id`.
 - `serializeTelegram(node, mode?)` — markdown-aware HTML serializer
 - `markdownToTelegramHtml(text)` — standalone Markdown → Telegram-HTML
 - `splitMessage(text, maxLength?)` — chunk safely on paragraph/sentence/word boundaries, preserving fenced code blocks
+
+## Tuning the throttle
+
+`throttleMs` (default `800`) controls how often the renderer is allowed to commit to Telegram while React is producing updates. Pick it to match what you're optimizing for:
+
+| value | behaviour | when to use |
+| --- | --- | --- |
+| **300–500ms** | Smoother streaming, more `editMessageText` calls. | Short streams (a few seconds) where you want a near-real-time feel. |
+| **800ms (default)** | Balanced. Stays well under Telegram's per-chat edit budget on a single bot, even under sustained streaming. | Most agent / streaming-LLM use cases. |
+| **1500ms+** | Fewer edits, more "summary frames". | Long-running jobs where you'd rather show milestone updates than every token. |
+
+The hard ceiling is Telegram's rate limit: roughly **1 message edit per second per chat** (loosely; Telegram throttles silently when over). On a single bot serving multiple chats simultaneously you have separate budgets per chat, but if you're streaming into the *same* chat from concurrent jobs, lower throttles bunch them up against the shared limit.
+
+The renderer always **flushes on finish** (`useFinishRender()`), so the final render lands regardless of `throttleMs`. You're trading intermediate-frame frequency for API budget — never the final state.
 
 ## Example
 
