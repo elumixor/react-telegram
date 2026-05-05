@@ -39,7 +39,7 @@
     "react": ">=19"
   },
   "dependencies": {
-    "@elumixor/react-message-renderer": "^0.2.0"
+    "@elumixor/react-message-renderer": "^0.2.4"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
