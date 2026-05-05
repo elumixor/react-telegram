@@ -4,6 +4,10 @@ Stream React JSX into editable Telegram messages. Built on [`@elumixor/react-mes
 
 A `<Message>` is a Telegram message. Render once, the bot sends. Re-render with new state, the bot edits the same message in place via Telegram's `editMessageText` API. The reconciler tracks message ids and chunks for you.
 
+![Demo: parallel-research example](https://raw.githubusercontent.com/elumixor/react-telegram/main/doc/telegram-bot-example.gif)
+
+> Demo: the [`parallel-research`](./examples/parallel-research) example — four messages updating concurrently, real Claude streaming into the reasoning panel, photo gallery, and a final JSON report. ([higher-quality .mp4](https://raw.githubusercontent.com/elumixor/react-telegram/main/doc/telegram-bot-example.mp4))
+
 ## Install
 
 ```bash
