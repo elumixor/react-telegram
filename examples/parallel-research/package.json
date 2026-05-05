@@ -1,0 +1,22 @@
+{
+  "name": "parallel-research-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Parallel research crew: header + three concurrent worker messages (sources, gallery, reasoning) + a final report with a Document attachment.",
+  "scripts": {
+    "dev": "bun --watch run src/index.tsx"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@elumixor/react-message-renderer": "^0.2.4",
+    "@elumixor/react-telegram": "^0.2.1",
+    "grammy": "^1.42.0",
+    "react": "^19.2.5"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.14",
+    "typescript": "^6.0.3"
+  }
+}
