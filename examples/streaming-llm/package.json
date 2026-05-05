@@ -1,13 +1,14 @@
 {
-  "name": "streaming-counter-example",
+  "name": "streaming-llm-example",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Minimal grammy bot demonstrating streaming React updates into a single editable Telegram message.",
+  "description": "Stream a Claude response token-by-token into a single editable Telegram message.",
   "scripts": {
     "dev": "bun --watch run src/index.tsx"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@elumixor/react-message-renderer": "^0.2.3",
     "@elumixor/react-telegram": "^0.2.0",
     "grammy": "^1.42.0",

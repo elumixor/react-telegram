@@ -204,7 +204,7 @@ describe("attachments", () => {
 
   test("threadId on Message overrides ctx.message.message_thread_id", async () => {
     const fake = makeFakeContext();
-    fake.ctx.message = { message_thread_id: 999 } as unknown as Context["message"];
+    (fake.ctx as { message: unknown }).message = { message_thread_id: 999 };
     const r = new TelegramRenderer(fake.ctx, { throttleMs: 1 });
     await r.render(
       <>
@@ -219,7 +219,7 @@ describe("attachments", () => {
 
   test("falls back to ctx.message.message_thread_id when threadId not set", async () => {
     const fake = makeFakeContext();
-    fake.ctx.message = { message_thread_id: 999 } as unknown as Context["message"];
+    (fake.ctx as { message: unknown }).message = { message_thread_id: 999 };
     const r = new TelegramRenderer(fake.ctx, { throttleMs: 1 });
     await r.render(
       <>

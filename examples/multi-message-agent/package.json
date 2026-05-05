@@ -1,9 +1,9 @@
 {
-  "name": "streaming-counter-example",
+  "name": "multi-message-agent-example",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Minimal grammy bot demonstrating streaming React updates into a single editable Telegram message.",
+  "description": "Agent that emits multiple <Message>s with attachments as it works, demonstrating reconciliation across messages and Photo/Document tracking.",
   "scripts": {
     "dev": "bun --watch run src/index.tsx"
   },

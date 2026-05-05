@@ -1,6 +1,6 @@
 # @elumixor/react-telegram
 
-Stream React JSX into editable Telegram messages. Built on [`@elumixor/react-message-renderer`](../react-message-renderer) and [grammy](https://grammy.dev).
+Stream React JSX into editable Telegram messages. Built on [`@elumixor/react-message-renderer`](https://www.npmjs.com/package/@elumixor/react-message-renderer) and [grammy](https://grammy.dev).
 
 A `<Message>` is a Telegram message. Render once, the bot sends. Re-render with new state, the bot edits the same message in place via Telegram's `editMessageText` API. The reconciler tracks message ids and chunks for you.
 
@@ -86,9 +86,14 @@ The hard ceiling is Telegram's rate limit: roughly **1 message edit per second p
 
 The renderer always **flushes on finish** (`useFinishRender()`), so the final render lands regardless of `throttleMs`. You're trading intermediate-frame frequency for API budget — never the final state.
 
-## Example
+## Examples
 
-See [`examples/streaming-counter`](./examples/streaming-counter) for a full grammy bot you can run with `BOT_TOKEN=… bun run dev`.
+All under [`examples/`](./examples) — `cd` in, `cp .env.example .env`, fill in your bot token, `bun install && bun run dev`.
+
+- [`streaming-counter`](./examples/streaming-counter) — minimal: a fake progress bar streaming into one editable message. Start here.
+- [`streaming-llm`](./examples/streaming-llm) — pipes a streaming Claude response into a single message. Marquee demo.
+- [`multi-message-agent`](./examples/multi-message-agent) — agent emitting multiple `<Message>`s with a `<Photo>` attachment, demonstrating cross-message reconciliation.
+- [`forum-thread-router`](./examples/forum-thread-router) — routes replies into specific topic threads of a Telegram forum supergroup via `<Message threadId>`.
 
 ## Status
 

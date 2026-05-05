@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "streaming-counter-example",
+      "name": "multi-message-agent-example",
       "dependencies": {
         "@elumixor/react-message-renderer": "^0.2.3",
         "@elumixor/react-telegram": "^0.2.0",
