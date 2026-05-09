@@ -2,9 +2,15 @@
   "name": "@elumixor/react-telegram",
   "version": "0.2.1",
   "description": "Stream React JSX into editable Telegram messages. Built on @elumixor/react-message-renderer + grammy.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/elumixor/react-telegram.git"
@@ -13,10 +19,7 @@
     "./dist"
   ],
   "scripts": {
-    "build": "bun run build:clean && bun run build:bundle && bun run build:declaration",
-    "build:clean": "rm -rf ./dist",
-    "build:bundle": "bun build ./src/index.ts --outdir ./dist --target=node --external react --external react-reconciler --external grammy --external @elumixor/react-message-renderer",
-    "build:declaration": "tsc --project tsconfig.build.json",
+    "build": "unbuild",
     "test": "bun test",
     "check": "tsc --noEmit && bun run lint && biome format .",
     "lint": "biome check . --fix",
@@ -39,7 +42,7 @@
     "react": ">=19"
   },
   "dependencies": {
-    "@elumixor/react-message-renderer": "^0.2.4"
+    "@elumixor/react-message-renderer": "^0.2.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",
@@ -47,6 +50,7 @@
     "@types/react": "^19.2.14",
     "grammy": "^1.42.0",
     "react": "^19.2.5",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "unbuild": "^3.6.1"
   }
 }
