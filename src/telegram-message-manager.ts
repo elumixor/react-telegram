@@ -76,6 +76,23 @@ export interface TelegramMessageManagerOptions {
   logger?: TelegramMessageManagerLogger;
 }
 
+export interface UpdateOptions {
+  /** True on the final commit — persist the streamed draft as a real message. */
+  final?: boolean;
+  /** Opt into Telegram's sendMessageDraft streaming when the message is eligible. */
+  draftStreaming?: boolean;
+}
+
+/**
+ * Telegram draft identifiers must be non-zero and are scoped per chat; a process-wide counter
+ * keeps concurrent managers from animating each other's drafts.
+ */
+let draftIdCounter = 0;
+function nextDraftId(): number {
+  draftIdCounter += 1;
+  return draftIdCounter;
+}
+
 const noopLogger: TelegramMessageManagerLogger = {
   warn() {
     // no-op default
@@ -87,6 +104,8 @@ export class TelegramMessageManager {
   private lastSentText?: string;
   private lastSentChunks: string[] = [];
   private attachments: AttachmentRecord[] = [];
+  private draftId?: number;
+  private lastDraftText?: string;
   private readonly replyToMessageId?: number;
   private readonly logger: TelegramMessageManagerLogger;
 
@@ -104,11 +123,17 @@ export class TelegramMessageManager {
     return chatId;
   }
 
-  async update(node: ElementNode): Promise<void> {
+  async update(node: ElementNode, options: UpdateOptions = {}): Promise<void> {
+    const { final = false, draftStreaming = false } = options;
     const html = serializeTelegram(node);
     const chatId = this.chatId;
     const threadId = (node.props.threadId as number | undefined) ?? this.ctx.message?.message_thread_id;
     const linkPreview = node.props.linkPreview as LinkPreviewOptions | undefined;
+
+    if (draftStreaming && this.canStreamDraft(node, html)) {
+      await this.updateViaDraft(node, html, threadId, linkPreview, final);
+      return;
+    }
 
     const textChanged = html !== this.lastSentText;
 
@@ -157,6 +182,62 @@ export class TelegramMessageManager {
       this.lastSentChunks = newChunks;
       this.lastSentText = html;
     }
+
+    await this.syncAttachments(node, threadId);
+  }
+
+  /**
+   * Drafts are single, text-only messages in private chats. We also refuse to switch to drafting
+   * once a real message has been persisted, so a manager never mixes the two delivery paths.
+   */
+  private canStreamDraft(node: ElementNode, html: string): boolean {
+    if (this.ctx.chat?.type !== "private") return false;
+    if (this.messageIds.length > 0) return false;
+    if (collectAttachments(node).length > 0) return false;
+    return splitMessage(html).length <= 1;
+  }
+
+  /**
+   * While streaming, each commit re-sends the same draft_id with the latest text and Telegram
+   * animates the diff — no edit, no flicker. The draft is ephemeral (~30s), so the final commit
+   * persists the message with a real sendMessage.
+   */
+  private async updateViaDraft(
+    node: ElementNode,
+    html: string,
+    threadId: number | undefined,
+    linkPreview: LinkPreviewOptions | undefined,
+    final: boolean,
+  ): Promise<void> {
+    const chatId = this.chatId;
+
+    if (!final) {
+      // Telegram rejects empty draft text; nothing to animate until there is content.
+      if (!html || html === this.lastDraftText) return;
+      this.draftId ??= nextDraftId();
+      try {
+        await this.ctx.api.sendMessageDraft(chatId, this.draftId, html, {
+          parse_mode: "HTML",
+          message_thread_id: threadId,
+        });
+        this.lastDraftText = html;
+      } catch (error) {
+        this.logger.warn("Failed to send message draft", error);
+      }
+      return;
+    }
+
+    const msg = await this.ctx.api.sendMessage(chatId, html, {
+      parse_mode: "HTML",
+      message_thread_id: threadId,
+      reply_parameters: this.replyToMessageId ? { message_id: this.replyToMessageId } : undefined,
+      link_preview_options: getLinkPreviewOptions(html, linkPreview),
+    });
+
+    this.messageIds = [msg.message_id];
+    this.lastSentChunks = [html];
+    this.lastSentText = html;
+    this.lastDraftText = undefined;
 
     await this.syncAttachments(node, threadId);
   }

@@ -1,6 +1,6 @@
 {
   "name": "@elumixor/react-telegram",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Stream React JSX into editable Telegram messages. Built on @elumixor/react-message-renderer + grammy.",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
@@ -42,7 +42,7 @@
     "react": ">=19"
   },
   "dependencies": {
-    "@elumixor/react-message-renderer": "^0.2.5"
+    "@elumixor/react-message-renderer": "^0.3.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.13",

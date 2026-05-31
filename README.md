@@ -68,7 +68,7 @@ In the chat, the user sees one message that grows in place from "Loading…" to 
 
 ## Public API
 
-- `TelegramRenderer(ctx, { throttleMs?, logger? })`
+- `TelegramRenderer(ctx, { throttleMs?, logger?, draftStreaming? })`
 - `TelegramMessageManager(ctx, { replyToMessageId?, logger? })` — single-message-instance manager, if you want to skip the React layer
 - `<Photo src caption?>` and `<Document src filename? caption?>` — declarative attachments. Place them inside `<Message>`; they're sent as replies to the parent text message and tracked positionally so re-renders don't resend.
 - `<Message threadId={n}>` — explicit forum/topic thread routing. Overrides `ctx.message?.message_thread_id`.
@@ -89,6 +89,20 @@ In the chat, the user sees one message that grows in place from "Loading…" to 
 The hard ceiling is Telegram's rate limit: roughly **1 message edit per second per chat** (loosely; Telegram throttles silently when over). On a single bot serving multiple chats simultaneously you have separate budgets per chat, but if you're streaming into the *same* chat from concurrent jobs, lower throttles bunch them up against the shared limit.
 
 The renderer always **flushes on finish** (`useFinishRender()`), so the final render lands regardless of `throttleMs`. You're trading intermediate-frame frequency for API budget — never the final state.
+
+## Draft streaming (`sendMessageDraft`)
+
+Telegram Bot API 9.3 added [`sendMessageDraft`](https://core.telegram.org/bots/api#sendmessagedraft), a method built for streaming a message *while it's being generated*. Instead of editing one message over and over, you re-send the same `draft_id` with progressively longer text and the client animates the diff natively — no flicker, and it isn't subject to the edit-spam rate pressure. The draft is an ephemeral ~30s preview, so when generation finishes the renderer persists the result with a real `sendMessage`.
+
+Opt in with `draftStreaming: true`:
+
+```ts
+const renderer = new TelegramRenderer(ctx, { draftStreaming: true, throttleMs: 150 });
+```
+
+Because it animates instead of editing, you can drop `throttleMs` much lower for a near-real-time feel.
+
+It's off by default and auto-gated to the cases the method supports — a single **private chat**, a **single chunk** (≤4096 chars), and **text only** (no `<Photo>`/`<Document>`). Anything outside that (groups, multi-chunk, attachments) silently falls back to the edit-based path, so nothing regresses. Requires grammY ≥ 1.30.
 
 ## Examples
 

@@ -48,7 +48,10 @@ bot.on("message:text", async (ctx: Context) => {
   const prompt = ctx.message?.text;
   if (!prompt) return;
   const replyTo = ctx.message?.message_id;
-  const renderer = new TelegramRenderer(ctx, { throttleMs: 500 });
+  // In a private chat this single text message is eligible for draft streaming: flip on
+  // `draftStreaming` and Telegram animates each update via sendMessageDraft instead of editing,
+  // so you can push the throttle way down. Falls back to edits automatically when ineligible.
+  const renderer = new TelegramRenderer(ctx, { throttleMs: 500, draftStreaming: true });
 
   await renderer.render(
     <Message repliesTo={replyTo}>

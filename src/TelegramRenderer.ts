@@ -1,18 +1,34 @@
-import { type ElementNode, Renderer, type RendererOptions } from "@elumixor/react-message-renderer";
+import {
+  type ElementNode,
+  Renderer,
+  type RendererOptions,
+  type RenderPassOptions,
+} from "@elumixor/react-message-renderer";
 import type { Context } from "grammy";
 import { TelegramMessageManager } from "./telegram-message-manager";
 
+export interface TelegramRendererOptions extends RendererOptions {
+  /**
+   * Stream eligible messages via Telegram's `sendMessageDraft` instead of repeated edits.
+   * Off by default. Auto-gated to messages it supports (private chat, single chunk, text-only);
+   * everything else falls back to the edit-based path. Pairs well with a low `throttleMs`.
+   */
+  draftStreaming?: boolean;
+}
+
 export class TelegramRenderer extends Renderer {
   private messageManagers: TelegramMessageManager[] = [];
+  private readonly draftStreaming: boolean;
 
   constructor(
     private readonly ctx: Context,
-    rendererOptions?: RendererOptions,
+    rendererOptions?: TelegramRendererOptions,
   ) {
     super(rendererOptions);
+    this.draftStreaming = rendererOptions?.draftStreaming ?? false;
   }
 
-  protected async renderMessages(messageNodes: ElementNode[]): Promise<void> {
+  protected async renderMessages(messageNodes: ElementNode[], { final }: RenderPassOptions): Promise<void> {
     for (const [i, node] of messageNodes.entries()) {
       if (!node) continue;
 
@@ -24,7 +40,7 @@ export class TelegramRenderer extends Renderer {
         });
       }
 
-      await this.messageManagers[i].update(node);
+      await this.messageManagers[i].update(node, { final, draftStreaming: this.draftStreaming });
     }
 
     for (const manager of this.messageManagers.slice(messageNodes.length)) await manager.deleteMessages();

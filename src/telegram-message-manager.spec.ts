@@ -4,7 +4,7 @@ import type { Context } from "grammy";
 import { TelegramMessageManager } from "./telegram-message-manager";
 
 interface ApiCall {
-  method: "sendMessage" | "editMessageText" | "deleteMessage";
+  method: "sendMessage" | "editMessageText" | "deleteMessage" | "sendMessageDraft";
   args: unknown[];
 }
 
@@ -14,11 +14,11 @@ interface FakeContext {
   setNextMessageId: (id: number) => void;
 }
 
-function makeFakeContext(initialChatId = 100): FakeContext {
+function makeFakeContext(initialChatId = 100, chatType: "private" | "group" = "group"): FakeContext {
   const calls: ApiCall[] = [];
   let nextMessageId = 1000;
   const ctx = {
-    chat: { id: initialChatId },
+    chat: { id: initialChatId, type: chatType },
     message: { message_thread_id: undefined },
     api: {
       sendMessage: async (chatId: number, text: string, options?: unknown) => {
@@ -31,6 +31,10 @@ function makeFakeContext(initialChatId = 100): FakeContext {
       },
       deleteMessage: async (chatId: number, messageId: number) => {
         calls.push({ method: "deleteMessage", args: [chatId, messageId] });
+        return true;
+      },
+      sendMessageDraft: async (chatId: number, draftId: number, text: string, options?: unknown) => {
+        calls.push({ method: "sendMessageDraft", args: [chatId, draftId, text, options] });
         return true;
       },
     },
@@ -183,5 +187,65 @@ describe("TelegramMessageManager", () => {
     (fake.ctx as unknown as { chat: undefined }).chat = undefined;
     const mgr = new TelegramMessageManager(fake.ctx);
     await expect(mgr.update(message("hi"))).rejects.toThrow(/Chat ID/);
+  });
+
+  describe("draft streaming", () => {
+    test("non-final commit in a private chat streams via sendMessageDraft, not edit/send", async () => {
+      const fake = makeFakeContext(100, "private");
+      const mgr = new TelegramMessageManager(fake.ctx);
+      await mgr.update(message("typing…"), { draftStreaming: true });
+      expect(fake.calls).toHaveLength(1);
+      expect(fake.calls[0]?.method).toBe("sendMessageDraft");
+    });
+
+    test("successive drafts reuse the same non-zero draft_id and dedupe identical text", async () => {
+      const fake = makeFakeContext(100, "private");
+      const mgr = new TelegramMessageManager(fake.ctx);
+      await mgr.update(message("a"), { draftStreaming: true });
+      await mgr.update(message("ab"), { draftStreaming: true });
+      await mgr.update(message("ab"), { draftStreaming: true });
+      const drafts = fake.calls.filter((c) => c.method === "sendMessageDraft");
+      expect(drafts).toHaveLength(2);
+      const id0 = drafts[0]?.args[1] as number;
+      const id1 = drafts[1]?.args[1] as number;
+      expect(id0).not.toBe(0);
+      expect(id1).toBe(id0);
+    });
+
+    test("final commit persists the message via sendMessage", async () => {
+      const fake = makeFakeContext(100, "private");
+      const mgr = new TelegramMessageManager(fake.ctx);
+      await mgr.update(message("partial"), { draftStreaming: true });
+      fake.calls.length = 0;
+      await mgr.update(message("complete"), { draftStreaming: true, final: true });
+      expect(fake.calls).toHaveLength(1);
+      expect(fake.calls[0]?.method).toBe("sendMessage");
+      expect(fake.calls[0]?.args[1]).toBe("complete");
+    });
+
+    test("group chats are not eligible — falls back to sendMessage", async () => {
+      const fake = makeFakeContext(100, "group");
+      const mgr = new TelegramMessageManager(fake.ctx);
+      await mgr.update(message("hi"), { draftStreaming: true });
+      expect(fake.calls.filter((c) => c.method === "sendMessageDraft")).toHaveLength(0);
+      expect(fake.calls[0]?.method).toBe("sendMessage");
+    });
+
+    test("multi-chunk content is not eligible — falls back to sendMessage", async () => {
+      const fake = makeFakeContext(100, "private");
+      const mgr = new TelegramMessageManager(fake.ctx);
+      await mgr.update(message("m ".repeat(3000)), { draftStreaming: true });
+      expect(fake.calls.filter((c) => c.method === "sendMessageDraft")).toHaveLength(0);
+      expect(fake.calls.filter((c) => c.method === "sendMessage").length).toBeGreaterThan(1);
+    });
+
+    test("draftStreaming off keeps the edit-based path even in a private chat", async () => {
+      const fake = makeFakeContext(100, "private");
+      const mgr = new TelegramMessageManager(fake.ctx);
+      await mgr.update(message("v1"));
+      await mgr.update(message("v2"));
+      expect(fake.calls.filter((c) => c.method === "sendMessageDraft")).toHaveLength(0);
+      expect(fake.calls.map((c) => c.method)).toEqual(["sendMessage", "editMessageText"]);
+    });
   });
 });
